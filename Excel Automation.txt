@@ -1,0 +1,43 @@
+Folder.GetFiles Folder: $'''E:\\Power Platform\\PAD\\Samples''' FileFilter: $'''*.xlsx''' IncludeSubfolders: True FailOnAccessDenied: True SortBy1: Folder.SortBy.NoSort SortDescending1: False SortBy2: Folder.SortBy.NoSort SortDescending2: False SortBy3: Folder.SortBy.NoSort SortDescending3: False Files=> Files
+Variables.CreateNewDatatable InputTable: { ^['Region', 'Sales Person', 'Total Sales'] } DataTable=> DataTable
+SET Counter TO 0
+LOOP FOREACH CurrentFile IN Files
+    Variables.IncreaseVariable Value: Counter IncrementValue: 1
+    Excel.LaunchExcel.LaunchAndOpenUnderExistingProcess Path: CurrentFile.FullName Visible: True ReadOnly: False UseMachineLocale: False Instance=> ExcelInstance
+    Excel.ReadFromExcel.ReadAllCells Instance: ExcelInstance GetCellContentsMode: Excel.GetCellContentsMode.TypedValues FirstLineIsHeader: True RangeValue=> ExcelData
+    Variables.MergeDataTables FirstDataTable: DataTable SecondDataTable: ExcelData MergeMode: Variables.MergeMode.IgnoreExtraColumns
+    Excel.CloseExcel.Close Instance: ExcelInstance
+END
+LOOP FOREACH CurrentItem IN DataTable
+    SWITCH CurrentItem[0]
+        CASE = $'''North'''
+            Text.ToNumber Text: CurrentItem[2] Number=> NorthSales
+            SET TotalNorthSales TO TotalNorthSales + NorthSales
+        CASE = $'''South'''
+            Text.ToNumber Text: CurrentItem[2] Number=> SouthSales
+            SET TotalSouthSales TO TotalSouthSales + SouthSales
+        CASE = $'''East'''
+            Text.ToNumber Text: CurrentItem[2] Number=> EastSales
+            SET TotalEastSales TO TotalEastSales + EastSales
+        CASE = $'''West'''
+            Text.ToNumber Text: CurrentItem[2] Number=> WestSales
+            SET TotalWestSales TO TotalWestSales + WestSales
+    END
+END
+Variables.CreateNewDatatable InputTable: { ^['Region', 'Total Sales', 'Average Sales'], [$'''North''', TotalNorthSales, TotalNorthSales / Counter], [$'''South''', TotalSouthSales, TotalSouthSales / Counter], [$'''East''', TotalEastSales, TotalEastSales / Counter], [$'''West''', TotalWestSales, TotalWestSales / Counter] } DataTable=> DataTable2
+IF (Folder.IfFolderExists.Exists Path: $'''E:\\Power Platform\\PAD\\Consolidated Data''') THEN
+    Folder.Create FolderPath: $'''E:\\Power Platform\\PAD''' FolderName: $'''Consolidated Data''' Folder=> NewFolder
+END
+Excel.LaunchExcel.LaunchUnderExistingProcess Visible: True UseMachineLocale: False Instance=> ExcelInstance2
+Variables.CreateNewDatatable InputTable: { ^['Region', 'Sales Person', 'Total Sales'], [$'''Region''', $'''Sales Person''', $'''Total Sales'''] } DataTable=> ExcelHeaderTable1
+Variables.CreateNewDatatable InputTable: { ^['Region', 'Sales Person', 'Average Sales'], [$'''Region''', $'''Sales Person''', $'''Average Sales'''] } DataTable=> ExcelHeaderDataTable2
+Excel.RenameWorksheet.RenameWorksheetWithName Instance: ExcelInstance2 Name: $'''Sheet1''' NewName: $'''Consolidated Data'''
+Excel.SetActiveWorksheet.ActivateWorksheetByName Instance: ExcelInstance2 Name: $'''Consolidated Data'''
+Excel.WriteToExcel.WriteCell Instance: ExcelInstance2 Value: ExcelHeaderTable1 Column: $'''A''' Row: 1
+Excel.WriteToExcel.WriteCell Instance: ExcelInstance2 Value: DataTable Column: $'''A''' Row: 2
+Excel.AddWorksheet Instance: ExcelInstance2 Name: $'''Calculation''' WorksheetPosition: Excel.WorksheetPosition.Last
+Excel.WriteToExcel.WriteCell Instance: ExcelInstance2 Value: ExcelHeaderDataTable2 Column: $'''A''' Row: 1
+Excel.WriteToExcel.WriteCell Instance: ExcelInstance2 Value: DataTable2 Column: $'''A''' Row: 2
+DateTime.GetCurrentDateTime.Local DateTimeFormat: DateTime.DateTimeFormat.DateAndTime CurrentDateTime=> CurrentDateTime
+Text.ConvertDateTimeToText.FromCustomDateTime DateTime: CurrentDateTime CustomFormat: $'''yyyy_MM_dd hh:mm:ss''' Result=> FormattedDateTime
+Excel.CloseExcel.CloseAndSaveAs Instance: ExcelInstance2 DocumentFormat: Excel.ExcelFormat.OpenXmlWorkbook DocumentPath: $'''E:\\Power Platform\\PAD\\Consolidate Data_%FormattedDateTime%.xlsx'''
