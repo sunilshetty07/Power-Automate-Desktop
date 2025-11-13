@@ -25,7 +25,7 @@ LOOP FOREACH CurrentItem IN DataTable
     END
 END
 Variables.CreateNewDatatable InputTable: { ^['Region', 'Total Sales', 'Average Sales'], [$'''North''', TotalNorthSales, TotalNorthSales / Counter], [$'''South''', TotalSouthSales, TotalSouthSales / Counter], [$'''East''', TotalEastSales, TotalEastSales / Counter], [$'''West''', TotalWestSales, TotalWestSales / Counter] } DataTable=> DataTable2
-IF (Folder.IfFolderExists.Exists Path: $'''E:\\Power Platform\\PAD\\Consolidated Data''') THEN
+IF (Folder.IfFolderExists.DoesNotExist Path: $'''E:\\Power Platform\\PAD\\Consolidated Data''') THEN
     Folder.Create FolderPath: $'''E:\\Power Platform\\PAD''' FolderName: $'''Consolidated Data''' Folder=> NewFolder
 END
 Excel.LaunchExcel.LaunchUnderExistingProcess Visible: True UseMachineLocale: False Instance=> ExcelInstance2
@@ -39,5 +39,5 @@ Excel.AddWorksheet Instance: ExcelInstance2 Name: $'''Calculation''' WorksheetPo
 Excel.WriteToExcel.WriteCell Instance: ExcelInstance2 Value: ExcelHeaderDataTable2 Column: $'''A''' Row: 1
 Excel.WriteToExcel.WriteCell Instance: ExcelInstance2 Value: DataTable2 Column: $'''A''' Row: 2
 DateTime.GetCurrentDateTime.Local DateTimeFormat: DateTime.DateTimeFormat.DateAndTime CurrentDateTime=> CurrentDateTime
-Text.ConvertDateTimeToText.FromCustomDateTime DateTime: CurrentDateTime CustomFormat: $'''yyyy_MM_dd hh:mm:ss''' Result=> FormattedDateTime
-Excel.CloseExcel.CloseAndSaveAs Instance: ExcelInstance2 DocumentFormat: Excel.ExcelFormat.OpenXmlWorkbook DocumentPath: $'''E:\\Power Platform\\PAD\\Consolidate Data_%FormattedDateTime%.xlsx'''
+Text.ConvertDateTimeToText.FromCustomDateTime DateTime: CurrentDateTime CustomFormat: $'''yyyy_MM_dd hh_mm_ss''' Result=> FormattedDateTime
+Excel.CloseExcel.CloseAndSaveAs Instance: ExcelInstance2 DocumentFormat: Excel.ExcelFormat.OpenXmlWorkbook DocumentPath: $'''E:\\Power Platform\\PAD\\Consolidated Data\\Consolidate Data_%FormattedDateTime%.xlsx'''
