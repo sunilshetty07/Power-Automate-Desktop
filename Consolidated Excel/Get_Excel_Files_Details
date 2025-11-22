@@ -1,0 +1,126 @@
+# The following action displays a custom form and prompts you to select two Excel files, choose whether more than two files need to be consolidated, and populate the recipient and sender email addresses.
+@@statistics_TextBlock: '3'
+@@statistics_Input_File: '2'
+@@statistics_Input_Toggle: '1'
+@@statistics_Input_Text: '2'
+@@statistics_Action_Submit: '1'
+Display.ShowCustomDialog CardTemplateJson: '''{
+                                                          \"type\": \"AdaptiveCard\",
+                                                          \"version\": \"1.4\",
+                                                          \"id\": \"AdaptiveCard\",
+                                                          \"body\": [
+                                                            {
+                                                              \"type\": \"TextBlock\",
+                                                              \"id\": \"Title\",
+                                                              \"text\": \"${Title_Text}\"
+                                                            },
+                                                            {
+                                                              \"type\": \"TextBlock\",
+                                                              \"id\": \"Text block\",
+                                                              \"text\": \"${Text_block_Text}\"
+                                                            },
+                                                            {
+                                                              \"type\": \"Input.File\",
+                                                              \"id\": \"FirstFile\",
+                                                              \"isRequired\": true,
+                                                              \"errorMessage\": \"${FirstFile_ErrorMessage}\"
+                                                            },
+                                                            {
+                                                              \"type\": \"TextBlock\",
+                                                              \"id\": \"Text block2\",
+                                                              \"text\": \"${Text_block2_Text}\"
+                                                            },
+                                                            {
+                                                              \"type\": \"Input.File\",
+                                                              \"id\": \"SecondFile\",
+                                                              \"isRequired\": true,
+                                                              \"label\": \"\",
+                                                              \"errorMessage\": \"${SecondFile_ErrorMessage}\"
+                                                            },
+                                                            {
+                                                              \"type\": \"Input.Toggle\",
+                                                              \"id\": \"MoreFiles\",
+                                                              \"title\": \"${MoreFiles_Title}\",
+                                                              \"valueOn\": \"${MoreFiles_ValueOn}\",
+                                                              \"valueOff\": \"${MoreFiles_ValueOff}\",
+                                                              \"value\": \"${MoreFiles_Value}\"
+                                                            },
+                                                            {
+                                                              \"type\": \"Input.Text\",
+                                                              \"id\": \"RecipientEmailAddress\",
+                                                              \"value\": \"${RecipientEmailAddress_Value}\",
+                                                              \"style\": \"email\",
+                                                              \"isRequired\": true,
+                                                              \"label\": \"${RecipientEmailAddress_Label}\"
+                                                            },
+                                                            {
+                                                              \"type\": \"Input.Text\",
+                                                              \"id\": \"EmailAddress\",
+                                                              \"style\": \"email\",
+                                                              \"isRequired\": true,
+                                                              \"label\": \"${EmailAddress_Label}\"
+                                                            }
+                                                          ],
+                                                          \"actions\": [
+                                                            {
+                                                              \"type\": \"Action.Submit\",
+                                                              \"id\": \"Submit\",
+                                                              \"title\": \"${Submit_Title}\"
+                                                            }
+                                                          ]
+                                                        }''' CustomFormData=> CustomFormData ButtonPressed=> ButtonPressed @Title_Text: $'''Consolidate data from different Excel spreadsheets into one.''' @Text_block_Text: $'''Select the first Excel file to read data from:''' @FirstFile_ErrorMessage: $'''File not found''' @Text_block2_Text: $'''Select the second Excel file to read data from:''' @SecondFile_ErrorMessage: $'''File not found''' @MoreFiles_Title: $'''Do you want to select more files? ''' @MoreFiles_Value: $'''False''' @MoreFiles_ValueOn: $'''True''' @MoreFiles_ValueOff: $'''False''' @RecipientEmailAddress_Label: $'''Please enter the email address to send the final report to:''' @RecipientEmailAddress_Value: $'''finance@contoso.com''' @EmailAddress_Label: $'''Please enter your email account on Outlook:''' @Submit_Title: $'''Ok'''
+# The following 'If' action checks whether the 'Cancel' button was pressed in the Display custom form dialog. If not, the flow continues running.
+IF ButtonPressed <> $'''Cancel''' THEN
+    # After displaying the custom form, the flow stores the selected files into the previously created list and the value of the 'MoreFiles' toggle input into the 'MoreFiles' variable.
+    Variables.AddItemToList Item: CustomFormData['FirstFile'] List: List
+    Variables.AddItemToList Item: CustomFormData['SecondFile'] List: List
+    SET MoreFiles TO CustomFormData['MoreFiles']
+    # The loop repeats as long as the 'MoreFiles' variable contains the value 'True'.
+    LOOP WHILE ($'''True''') = ($'''True''')
+        IF MoreFiles = $'''True''' THEN
+            # The following block of actions displays a custom form and prompts you to select an additional Excel file and choose whether more files need to be consolidated. The flow stores the selected file into the previously created list and the value of the 'MoreFiles' toggle input into the 'MoreFiles' variable.
+            @@statistics_TextBlock: '1'
+@@statistics_Input_File: '1'
+@@statistics_Input_Toggle: '1'
+@@statistics_Action_Submit: '1'
+Display.ShowCustomDialog CardTemplateJson: '''{
+                                                                                                                                                                                                                                                                                  \"type\": \"AdaptiveCard\",
+                                                                                                                                                                                                                                                                                  \"version\": \"1.4\",
+                                                                                                                                                                                                                                                                                  \"id\": \"AdaptiveCard\",
+                                                                                                                                                                                                                                                                                  \"body\": [
+                                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                                      \"type\": \"TextBlock\",
+                                                                                                                                                                                                                                                                                      \"id\": \"Text block\",
+                                                                                                                                                                                                                                                                                      \"text\": \"${Text_block_Text}\"
+                                                                                                                                                                                                                                                                                    },
+                                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                                      \"type\": \"Input.File\",
+                                                                                                                                                                                                                                                                                      \"id\": \"AdditionalFile\",
+                                                                                                                                                                                                                                                                                      \"isRequired\": true
+                                                                                                                                                                                                                                                                                    },
+                                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                                      \"type\": \"Input.Toggle\",
+                                                                                                                                                                                                                                                                                      \"id\": \"MoreFiles\",
+                                                                                                                                                                                                                                                                                      \"title\": \"${MoreFiles_Title}\",
+                                                                                                                                                                                                                                                                                      \"valueOn\": \"${MoreFiles_ValueOn}\",
+                                                                                                                                                                                                                                                                                      \"valueOff\": \"${MoreFiles_ValueOff}\",
+                                                                                                                                                                                                                                                                                      \"label\": \"${MoreFiles_Label}\"
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                  ],
+                                                                                                                                                                                                                                                                                  \"actions\": [
+                                                                                                                                                                                                                                                                                    {
+                                                                                                                                                                                                                                                                                      \"type\": \"Action.Submit\",
+                                                                                                                                                                                                                                                                                      \"id\": \"Submit\",
+                                                                                                                                                                                                                                                                                      \"title\": \"${Submit_Title}\"
+                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                  ]
+                                                                                                                                                                                                                                                                                }''' CustomFormData=> CustomFormData2 ButtonPressed=> ButtonPressed2 @Text_block_Text: $'''Please select another excel file to read data from:''' @MoreFiles_Label: $'''Do you want to select another file?''' @MoreFiles_Title: $'''Yes''' @MoreFiles_ValueOn: $'''True''' @MoreFiles_ValueOff: $'''False''' @Submit_Title: $'''Ok'''
+            Variables.AddItemToList Item: CustomFormData2['AdditionalFile'] List: List
+            SET MoreFiles TO CustomFormData2['MoreFiles']
+        ELSE
+            EXIT LOOP
+        END
+    END
+ELSE
+    EXIT Code: 0 ErrorMessage: $'''Flow run cancelled by the user. '''
+END
