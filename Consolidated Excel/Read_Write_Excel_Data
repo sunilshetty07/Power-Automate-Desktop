@@ -1,0 +1,6 @@
+# This subflow launches the selected Excel file (defined by the loop in the main sublfow), reads its contents, and appends them into the newly created Excel file.
+Excel.LaunchExcel.LaunchAndOpen Path: List[LoopIndex] Visible: True ReadOnly: False LoadAddInsAndMacros: False Instance=> ExcelInstance2
+Excel.ReadFromExcel.ReadAllCells Instance: ExcelInstance2 FirstLineIsHeader: False GetCellContentsMode: Excel.GetCellContentsMode.FormattedTextValues RangeValue=> ExcelData
+Excel.CloseExcel.Close Instance: ExcelInstance2
+Excel.GetFirstFreeRowOnColumn Instance: ExcelInstance Column: $'''A''' FirstFreeRowOnColumn=> FirstFreeRowOnColumn
+Excel.WriteToExcel.WriteCell Instance: ExcelInstance Value: ExcelData Column: $'''A''' Row: FirstFreeRowOnColumn
