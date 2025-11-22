@@ -1,0 +1,45 @@
+Variables.CreateNewList List=> List
+CALL Get_Excel_Files_Details
+Folder.GetSpecialFolder SpecialFolder: Folder.SpecialFolder.Personal SpecialFolderPath=> DocumentsFolderPath
+# The flow launches a new Excel instance that will be used later to store the consolidated data.
+Excel.LaunchExcel.Launch Visible: True LoadAddInsAndMacros: False Instance=> ExcelInstance
+# The loop runs the 'Read_Write_Excel_Date' subflow for each file stored into the list.
+LOOP LoopIndex FROM 0 TO List.Count - 1 STEP 1
+    CALL Read_Write_Excel_Data
+END
+# The 'Close Excel' action saves the consolidated report in your documents folder and closes the Excel instance. The folder path is retrieved using the 'Get special folder' action in step 3.
+Excel.CloseExcel.CloseAndSaveAs Instance: ExcelInstance DocumentFormat: Excel.ExcelFormat.FromExtension DocumentPath: $'''%DocumentsFolderPath%\\Consolidated Report.xlsx'''
+# The following actions launch Outlook, send the consolidated report to the provided recipient, and close the Outlook instance.
+File.ConvertToBase64 File: $'''%DocumentsFolderPath%\\Consolidated Report.xlsx''' Base64Text=> Base64Text
+@@'emailMessage/Sensitivity': ''
+@@connectionDisplayName: 'Office 365 Outlook'
+External.InvokeCloudConnector Connection: 'd7e7aae0-87b9-4e14-ad73-1bfc73804265' ConnectorId: '/providers/Microsoft.PowerApps/apis/shared_office365' OperationId: 'SendEmailV2' @'emailMessage/To': CustomFormData['RecipientEmailAddress'] @'emailMessage/Subject': $'''Consolidated Excel report from a desktop flow''' @'emailMessage/Body': $'''Hi, 
+
+Please find the report attached. 
+
+-Power Automate for desktop
+''' @'emailMessage/Attachments': [{ 'Name': $'''Consolidated Report.xlsx''', 'ContentBytes': Base64Text }]
+Display.ShowMessageDialog.ShowMessage Title: $'''Flow run successful''' Message: $'''The consolidated file has been saved in %DocumentsFolderPath%\\Consolidated Report.xlsx and emailed to %CustomFormData['RecipientEmailAddress']%''' Icon: Display.Icon.None Buttons: Display.Buttons.OK DefaultButton: Display.DefaultButton.Button1 IsTopMost: True ButtonPressed=> ButtonPressed3
+
+# [ControlRepository][PowerAutomateDesktop]
+
+{
+  "ControlRepositorySymbols": [],
+  "ImageRepositorySymbol": {
+    "Repository": "{\r\n  \"Folders\": [],\r\n  \"Images\": [],\r\n  \"Version\": 1\r\n}",
+    "ImportMetadata": {},
+    "Name": "imgrepo"
+  },
+  "ConnectionReferences": [
+    {
+      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_office365",
+      "DisplayName": "Office 365 Outlook",
+      "InternalId": "df6e9aae0-87b9-4e14-ad73-1bbc12547865",
+      "IsDisabled": false,
+      "LogicalName": "new_sharedoffice365_ex3a2",
+      "IsEmbedded": false,
+      "ConnectionName": "shared-office365-1bb5w19c-ce2d-4622-3449-f2b3-121dd",
+      "ConnectionDisplayName": "sunil@test.onmicrosoft.com"
+    }
+  ]
+}
